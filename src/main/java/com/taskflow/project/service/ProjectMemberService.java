@@ -12,6 +12,7 @@ import com.taskflow.project.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 
 @Service
@@ -30,12 +31,12 @@ public class ProjectMemberService {
     }
 
     // RBAC Helper: Check if requesting user is an ADMIN of the project
-    private void verifyAdminAccess(Long projectId, String requesterEmail) {
+    private void verifyAdminAccess(Long projectId, String requesterEmail) throws AccessDeniedException {
         User requester = userRepository.findByEmail(requesterEmail)
-                .orElseThrow(() -> new RuntimeException("User not found: " + requesterEmail));
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + requesterEmail));
 
         projectMemberRepository.findByProjectIdAndUserIdAndRole(projectId, requester.getId(), Role.ADMIN)
-                .orElseThrow(() -> new RuntimeException("Access Denied: Only project ADMINs can perform this action"));
+                .orElseThrow(() -> new AccessDeniedException("Access Denied: Only project ADMINs can perform this action"));
     }
 
     // RBAC Helper: Check if requesting user is a MEMBER or ADMIN of the project
@@ -50,7 +51,7 @@ public class ProjectMemberService {
     }
 
     @Transactional
-    public MemberResponse addMemberToProject(Long projectId, AddMemberRequest request, String requesterEmail) {
+    public MemberResponse addMemberToProject(Long projectId, AddMemberRequest request, String requesterEmail) throws AccessDeniedException {
         // 1. Verify caller has ADMIN permissions
         verifyAdminAccess(projectId, requesterEmail);
 
@@ -84,14 +85,14 @@ public class ProjectMemberService {
     }
 
     @Transactional
-    public void removeMemberFromProject(Long projectId, Long memberId, String requesterEmail) {
+    public void removeMemberFromProject(Long projectId, Long memberId, String requesterEmail) throws AccessDeniedException {
         verifyAdminAccess(projectId, requesterEmail);
 
         ProjectMember member = projectMemberRepository.findById(memberId)
                 .orElseThrow(() -> new RuntimeException("Member record not found"));
 
         if (!member.getProject().getId().equals(projectId)) {
-            throw new RuntimeException("Member does not belong to this project");
+            throw new AccessDeniedException("Member does not belong to this project");
         }
 
         projectMemberRepository.delete(member);

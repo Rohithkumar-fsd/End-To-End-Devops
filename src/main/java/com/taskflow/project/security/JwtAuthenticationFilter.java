@@ -36,9 +36,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
         final String userEmail;
+        String path = request.getServletPath();
+
+        // Skip filter execution for public auth endpoints or OPTIONS preflight
+        if (path.startsWith("/api/auth") || path.startsWith("/auth") || "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            System.out.println("DEBUG: Missing or invalid Authorization header!");
             filterChain.doFilter(request, response);
             return;
         }
@@ -46,7 +52,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         try {
             userEmail = jwtService.extractUsername(jwt);
-            System.out.println("DEBUG: Extracted Email from Token -> " + userEmail);
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
@@ -58,12 +63,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    System.out.println("DEBUG: SecurityContext populated successfully for user -> " + userEmail);
                 }
             }
         } catch (Exception e) {
-            // Token invalid or expired
-            System.out.println("DEBUG: Error parsing/validating JWT: " + e.getMessage());
+            System.out.println("Error come");
         }
 
         filterChain.doFilter(request, response);

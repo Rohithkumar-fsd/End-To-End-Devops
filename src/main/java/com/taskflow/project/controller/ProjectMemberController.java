@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class ProjectMemberController {
     public MemberResponse addMember(
             @PathVariable Long projectId,
             @Valid @RequestBody AddMemberRequest request,
-            Principal principal) {
+            Principal principal) throws AccessDeniedException {
         return projectMemberService.addMemberToProject(projectId, request, principal.getName());
     }
 
@@ -44,7 +45,7 @@ public class ProjectMemberController {
     public void removeMember(
             @PathVariable Long projectId,
             @PathVariable Long memberId,
-            Principal principal) {
+            Principal principal) throws AccessDeniedException {
         projectMemberService.removeMemberFromProject(projectId, memberId, principal.getName());
     }
 }

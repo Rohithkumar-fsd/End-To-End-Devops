@@ -28,7 +28,6 @@ public class ProjectController {
     public ProjectResponse createProject(
             @Valid @RequestBody CreateProjectRequest request, Principal principal) {
 
-        System.out.println(">>> RECEIVED PROJECT REQUEST: " + request);
         return projectService.createProject(request,principal.getName());
     }
 
