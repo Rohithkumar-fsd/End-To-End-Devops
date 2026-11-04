@@ -29,7 +29,6 @@ jobs:
         run: mvn clean verify
 
       # --- SONARQUBE ANALYSIS STEP ---
-          # --- SONARCLOUD ANALYSIS STEP ---
       - name: SonarCloud Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
